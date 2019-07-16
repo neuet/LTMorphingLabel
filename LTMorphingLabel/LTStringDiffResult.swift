@@ -27,17 +27,14 @@
 
 import Foundation
 
-public typealias LTStringDiffResult = ([LTCharacterDiffResult], skipDrawingResults: [Bool])
-
 public extension String {
     
-    func diffWith(_ anotherString: String?) -> LTStringDiffResult {
+    func diffWith(_ anotherString: String?) -> [LTCharacterDiffResult] {
         
         guard let anotherString = anotherString else {
             let diffResults: [LTCharacterDiffResult] =
                 Array(repeating: .delete, count: self.count)
-            let skipDrawingResults: [Bool] = Array(repeating: false, count: self.count)
-            return (diffResults, skipDrawingResults)
+            return diffResults
         }
         
         let newChars = anotherString.enumerated()
@@ -47,8 +44,7 @@ public extension String {
         let leftChars = Array(self)
         
         let maxLength = max(lhsLength, rhsLength)
-        var diffResults: [LTCharacterDiffResult] = Array(repeating: .add, count: maxLength) 
-        var skipDrawingResults: [Bool] = Array(repeating: false, count: maxLength)
+        var diffResults: [LTCharacterDiffResult] = Array(repeating: .add, count: maxLength)
         
         for i in 0..<maxLength {
             // If new string is longer than the original one
@@ -70,18 +66,6 @@ public extension String {
                 if i == j {
                     // Character not changed
                     diffResults[i] = .same
-                } else {
-                    // foundCharacterInRhs and move
-                    let offset = j - i
-                    
-                    if i <= rhsLength - 1 {
-                        // Move to a new index and add a new character to new original place
-                        diffResults[i] = .moveAndAdd(offset: offset)
-                    } else {
-                        diffResults[i] = .move(offset: offset)
-                    }
-                    
-                    skipDrawingResults[j] = true
                 }
                 break
             }
@@ -95,7 +79,7 @@ public extension String {
             }
         }
         
-        return (diffResults, skipDrawingResults)
+        return diffResults
         
     }
     

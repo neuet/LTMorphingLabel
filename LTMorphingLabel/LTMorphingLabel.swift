@@ -90,7 +90,7 @@ typealias LTMorphingSkipFramesClosure =
     var drawingClosures = [String: LTMorphingDrawingClosure]()
     var progressClosures = [String: LTMorphingManipulateProgressClosure]()
     var skipFramesClosures = [String: LTMorphingSkipFramesClosure]()
-    var diffResults: LTStringDiffResult?
+    var diffResults: [LTCharacterDiffResult]?
     var previousText = ""
     
     var currentFrame = 0
@@ -342,7 +342,7 @@ extension LTMorphingLabel {
             var currentRect = previousRects[index]
             let oriX = Float(currentRect.origin.x)
             var newX = Float(currentRect.origin.x)
-            let diffResult = diffResults!.0[index]
+            let diffResult = diffResults![index]
             var currentFontSize: CGFloat = font.pointSize
             var currentAlpha: CGFloat = 1.0
             
@@ -350,16 +350,6 @@ extension LTMorphingLabel {
                 // Move the character that exists in the new text to current position
             case .same:
                 newX = Float(newRects[index].origin.x)
-                currentRect.origin.x = CGFloat(
-                    LTEasing.easeOutQuint(progress, oriX, newX - oriX)
-                )
-            case .move(let offset):
-                newX = Float(newRects[index + offset].origin.x)
-                currentRect.origin.x = CGFloat(
-                    LTEasing.easeOutQuint(progress, oriX, newX - oriX)
-                )
-            case .moveAndAdd(let offset):
-                newX = Float(newRects[index + offset].origin.x)
                 currentRect.origin.x = CGFloat(
                     LTEasing.easeOutQuint(progress, oriX, newX - oriX)
                 )
@@ -451,7 +441,7 @@ extension LTMorphingLabel {
         
         // Add new characters
         for (i, character) in (text!).enumerated() {
-            if i >= diffResults?.0.count {
+            if i >= diffResults?.count {
                 break
             }
             
@@ -465,14 +455,9 @@ extension LTMorphingLabel {
                 progress = min(1.0, max(0.0, morphingProgress - morphingCharacterDelay * Float(i)))
             }
             
-            // Don't draw character that already exists
-            if diffResults?.skipDrawingResults[i] == true {
-                continue
-            }
-            
-            if let diffResult = diffResults?.0[i] {
+            if let diffResult = diffResults?[i] {
                 switch diffResult {
-                case .moveAndAdd, .replace, .add, .delete:
+                case .replace, .add, .delete:
                     let limboOfCharacter = limboOfNewCharacter(
                         character,
                         index: i,
